@@ -121,11 +121,12 @@
         ];
         let balance = 1000;
         let angle = 0; // Начальный угол для вращения
-        let spinDuration = 5000; // Длительность вращения
+        const spinDuration = 4000; // Длительность вращения
         let spinStartTime = null; // Время начала вращения
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const radius = centerX;
+        let isSpinning = false;
 
         function drawRoulette() {
             const segmentAngle = (2 * Math.PI) / segments.length;
@@ -163,6 +164,7 @@
                 requestAnimationFrame(animateWheel);
             } else {
                 angle = 0; // Останавливаем вращение
+                isSpinning = false;
                 placeBetResult();
             }
             drawRouletteWheel();
@@ -207,6 +209,8 @@
             document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
 
             // Запуск анимации вращения
+            isSpinning = true;
+            spinStartTime = null;
             requestAnimationFrame(animateWheel);
         }
 
@@ -220,25 +224,23 @@
             const winningNumber = winningSegment.number;
             const winningColor = winningSegment.color;
 
-            setTimeout(() => {
-                let payout = 0;
-                if ((betType === 'red' || betType === 'black') && betType === winningColor) {
-                    payout = betAmount * 1.5;
-                } else if (betType === 'green' && winningNumber === 0) {
-                    payout = betAmount * 10;
-                } else if (betType === 'number' && betNumber === winningNumber) {
-                    payout = betAmount * 5;
-                }
+            let payout = 0;
+            if ((betType === 'red' || betType === 'black') && betType === winningColor) {
+                payout = betAmount * 1.5;
+            } else if (betType === 'green' && winningNumber === 0) {
+                payout = betAmount * 10;
+            } else if (betType === 'number' && betNumber === winningNumber) {
+                payout = betAmount * 5;
+            }
 
-                if (payout > 0) {
-                    balance += payout;
-                    alert(`Поздравляем! Вы выиграли ${payout} монет!`);
-                } else {
-                    alert(`Вы проиграли. Выпало число ${winningNumber} (${winningColor}).`);
-                }
+            if (payout > 0) {
+                balance += payout;
+                alert(`Поздравляем! Вы выиграли ${payout} монет!`);
+            } else {
+                alert(`Вы проиграли. Выпало число ${winningNumber} (${winningColor}).`);
+            }
 
-                document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
-            }, 1000);
+            document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
         }
 
         drawRoulette();
