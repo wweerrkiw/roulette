@@ -160,10 +160,10 @@
             const easingFactor = 1 - Math.pow(1 - easingProgress, 3); // Замедление в конце
 
             if (easingProgress < 1) {
-                angle = (easingFactor * 10 * Math.PI) % (2 * Math.PI);
+                angle = (easingFactor * 10 * Math.PI + startAngle) % (2 * Math.PI);
                 requestAnimationFrame(animateWheel);
             } else {
-                angle = 0; // Останавливаем вращение
+                angle = startAngle; // Останавливаем вращение
                 isSpinning = false;
                 placeBetResult();
             }
@@ -204,7 +204,10 @@
             balance -= betAmount;
             document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
 
-            // Запуск анимации вращения
+            // Генерируем случайный начальный угол
+            const randomStartAngle = Math.random() * 2 * Math.PI; 
+            startAngle = randomStartAngle; // Запоминаем начальный угол
+
             isSpinning = true;
             spinStartTime = null;
             requestAnimationFrame(animateWheel);
