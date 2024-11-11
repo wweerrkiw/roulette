@@ -6,52 +6,74 @@
     <title>Рулетка</title>
     <style>
         body {
-            background-color: #333;
-            color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            background: linear-gradient(to bottom, #1e3c72, #2a5298);
+            color: #fff;
             font-family: Arial, sans-serif;
         }
 
         .balance-display {
-            margin-bottom: 20px;
-            font-size: 24px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(to right, #ffd700, #808080);
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
         }
 
         .roulette-container {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: 400px;
+            height: 400px;
             border-radius: 50%;
-            border: 10px solid #fff;
             overflow: hidden;
-        }
-
-        .roulette-wheel {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(red 0 10%, black 10% 20%, red 20% 30%, black 30% 40%, 
-                                       red 40% 50%, black 50% 60%, red 60% 70%, black 70% 80%, 
-                                       red 80% 90%, black 90% 100%);
-            transition: transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            border: 4px solid #fff;
         }
 
         .roulette-pointer {
             position: absolute;
-            top: -10px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
             border-left: 10px solid transparent;
             border-right: 10px solid transparent;
-            border-bottom: 20px solid yellow;
+            border-bottom: 30px solid yellow;
+        }
+
+        .bet-input {
+            margin: 10px 0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .bet-input input, .bet-input select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .bet-button {
+            padding: 10px 20px;
+            background-color: #ff4500;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .bet-button:hover {
+            background-color: #e03e00;
         }
     </style>
 </head>
@@ -59,22 +81,119 @@
     <div class="balance-display" id="balance">Баланс: 1000 монет</div>
     <div class="roulette-container">
         <div class="roulette-pointer"></div>
-        <div class="roulette-wheel" id="wheel"></div>
+        <canvas id="rouletteCanvas" width="400" height="400"></canvas>
     </div>
-    <button onclick="startSpin()">Spin</button>
+    <div class="bet-input">
+        <input type="number" id="betAmount" placeholder="Сумма ставки" min="1">
+        <select id="betType">
+            <option value="red">Красное</option>
+            <option value="black">Черное</option>
+            <option value="green">Зеленое (0)</option>
+            <option value="number">Число</option>
+        </select>
+        <input type="number" id="betNumber" placeholder="Число (0-36)" min="0" max="36" disabled>
+    </div>
+    <button class="bet-button" onclick="placeBet()">Сделать ставку</button>
 
     <script>
+        const canvas = document.getElementById('rouletteCanvas');
+        const ctx = canvas.getContext('2d');
+        const segments = [
+            { color: 'green', number: 0 },
+            { color: 'red', number: 32 }, { color: 'black', number: 15 },
+            { color: 'red', number: 19 }, { color: 'black', number: 4 },
+            { color: 'red', number: 21 }, { color: 'black', number: 2 },
+            { color: 'red', number: 25 }, { color: 'black', number: 17 },
+            { color: 'red', number: 34 }, { color: 'black', number: 6 },
+            { color: 'red', number: 27 }, { color: 'black', number: 13 },
+            { color: 'red', number: 36 }, { color: 'black', number: 11 },
+            { color: 'red', number: 30 }, { color: 'black', number: 8 },
+            { color: 'red', number: 23 }, { color: 'black', number: 10 },
+            { color: 'red', number: 5 }, { color: 'black', number: 24 },
+            { color: 'red', number: 16 }, { color: 'black', number: 33 },
+            { color: 'red', number: 1 }, { color: 'black', number: 20 },
+            { color: 'red', number: 14 }, { color: 'black', number: 31 },
+            { color: 'red', number: 9 }, { color: 'black', number: 22 },
+            { color: 'red', number: 18 }, { color: 'black', number: 29 },
+            { color: 'red', number: 7 }, { color: 'black', number: 28 },
+            { color: 'red', number: 12 }, { color: 'black', number: 35 },
+            { color: 'red', number: 3 }, { color: 'black', number: 26 }
+        ];
         let balance = 1000;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = centerX;
 
-        function startSpin() {
-            const wheel = document.getElementById('wheel');
-            let randomRotation = 360 * 5 + Math.floor(Math.random() * 360); // Останавливается на случайной позиции
-            wheel.style.transform = `rotate(${randomRotation}deg)`;
+        function drawRoulette() {
+            const segmentAngle = (2 * Math.PI) / segments.length;
+            segments.forEach((segment, index) => {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, index * segmentAngle, (index + 1) * segmentAngle);
+                ctx.fillStyle = segment.color;
+                ctx.fill();
+                ctx.closePath();
 
-            // Обновление баланса (примерно)
-            balance -= 100; // Уменьшаем баланс на ставку
-            document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
+                const angle = index * segmentAngle + segmentAngle / 2;
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle);
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.fillText(segment.number, radius - 30, 5);
+                ctx.restore();
+            });
         }
+
+        function placeBet() {
+            const betAmount = parseInt(document.getElementById('betAmount').value);
+            const betType = document.getElementById('betType').value;
+            const betNumber = parseInt(document.getElementById('betNumber').value);
+
+            if (isNaN(betAmount) || betAmount <= 0 || betAmount > balance) {
+                alert('Введите корректную сумму ставки.');
+                return;
+            }
+
+            balance -= betAmount;
+            document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
+
+            const randomIndex = Math.floor(Math.random() * segments.length);
+            const winningSegment = segments[randomIndex];
+            const winningNumber = winningSegment.number;
+            const winningColor = winningSegment.color;
+
+            setTimeout(() => {
+                let payout = 0;
+                if ((betType === 'red' || betType === 'black') && betType === winningColor) {
+                    payout = betAmount * 1.5;
+                } else if (betType === 'green' && winningNumber === 0) {
+                    payout = betAmount * 10;
+                } else if (betType === 'number' && betNumber === winningNumber) {
+                    payout = betAmount * 5;
+                }
+
+                if (payout > 0) {
+                    balance += payout;
+                    alert(`Поздравляем! Вы выиграли ${payout} монет!`);
+                } else {
+                    alert(`Вы проиграли. Выпало число ${winningNumber} (${winningColor}).`);
+                }
+
+                document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
+            }, 4000);
+        }
+
+        drawRoulette();
+
+        document.getElementById('betType').addEventListener('change', function () {
+            const betNumberInput = document.getElementById('betNumber');
+            if (this.value === 'number') {
+                betNumberInput.disabled = false;
+            } else {
+                betNumberInput.disabled = true;
+            }
+        });
     </script>
 </body>
 </html>
