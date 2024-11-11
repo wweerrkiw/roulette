@@ -42,7 +42,7 @@
             position: absolute;
             top: -30px;
             left: 50%;
-            transform: translateX(-50%) rotate(180deg);
+            transform: translateX(-50%);
             width: 0;
             height: 0;
             border-left: 10px solid transparent;
@@ -76,14 +76,12 @@
             background-color: #e03e00;
         }
 
-        /* История ставок */
         .history {
             position: absolute;
             top: 60px;
             left: 0;
             right: 0;
             display: flex;
-            flex-direction: row;
             gap: 10px;
             overflow: hidden;
             white-space: nowrap;
@@ -168,15 +166,42 @@
                 ctx.fill();
                 ctx.closePath();
 
-                const angle = index * segmentAngle + segmentAngle / 2;
+                const textAngle = index * segmentAngle + segmentAngle / 2;
                 ctx.save();
                 ctx.translate(centerX, centerY);
-                ctx.rotate(angle);
+                ctx.rotate(textAngle);
                 ctx.fillStyle = '#fff';
                 ctx.font = '12px Arial';
                 ctx.fillText(segment.number, radius - 30, 5);
                 ctx.restore();
             });
+        }
+
+        function spinRoulette(callback) {
+            let currentAngle = 0;
+            const targetAngle = Math.random() * 360 + 720; // Random spin + 2 full rotations
+            const spinSpeed = 10; // Initial spin speed
+            const deceleration = 0.95; // Deceleration factor
+
+            function animateSpin() {
+                currentAngle += spinSpeed;
+                spinSpeed *= deceleration;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate((currentAngle * Math.PI) / 180);
+                ctx.translate(-centerX, -centerY);
+                drawRoulette();
+                ctx.restore();
+
+                if (spinSpeed > 0.1) {
+                    requestAnimationFrame(animateSpin);
+                } else {
+                    callback(Math.floor(currentAngle / (360 / segments.length)) % segments.length);
+                }
+            }
+
+            animateSpin();
         }
 
         function placeBet() {
@@ -192,34 +217,36 @@
             balance -= betAmount;
             document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
 
-            const randomIndex = Math.floor(Math.random() * segments.length);
-            const winningSegment = segments[randomIndex];
-            const winningNumber = winningSegment.number;
-            const winningColor = winningSegment.color;
+            spinRoulette((winningIndex) => {
+                const winningSegment = segments[winningIndex];
+                const winningNumber = winningSegment.number;
+                const winningColor = winningSegment.color;
 
-            let payout = 0;
-            let resultText = 'Проигрыш';
+                let payout = 0;
+                let resultText = 'Проигрыш';
 
-            if ((betType === 'red' || betType === 'black') && betType === winningColor) {
-                payout = betAmount * 1.5;
-                resultText = 'Выигрыш';
-            } else if (betType === 'green' && winningNumber === 0) {
-                payout = betAmount * 10;
-                resultText = 'Выигрыш';
-            } else if (betType === 'number' && betNumber === winningNumber) {
-                payout = betAmount * 5;
-                resultText = 'Выигрыш';
-            }
+                if ((betType === 'red' || betType === 'black') && betType === winningColor) {
+                    payout = betAmount * 1.5;
+                    resultText = 'Выигрыш';
+                } else if (betType === 'green' && winningNumber === 0) {
+                    payout = betAmount * 10;
+                    resultText = 'Выигрыш';
+                } else if (betType === 'number' && betNumber === winningNumber) {
+                    payout = betAmount * 5;
+                    resultText = 'Выигрыш';
+                }
 
-            if (payout > 0) {
-                balance += payout;
-                alert(`Поздравляем! Вы выиграли ${payout} монет!`);
-            } else {
-                alert(`Вы проиграли. Выпало число ${winningNumber} (${winningColor}).`);
-            }
+                if (payout > 0) {
+                    balance += payout;
+                    alert(`Поздравляем! Вы выиграли ${payout} монет!`);
+                } else {
+                    alert(`Вы проиграли. Выпало число ${winningNumber} (${winningColor}).`);
+                }
 
-            document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
-            addHistory(winningNumber, winningColor, betAmount, resultText);
+                document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
+
+                addHistory(winningNumber, winningColor, betAmount, resultText);
+            });
         }
 
         function addHistory(number, color, betAmount, result) {
@@ -241,6 +268,11 @@
         }
 
         drawRoulette();
+
+        document.getElementById('betType').addEventListener('change', function () {
+            const betNumberInput = document.getElementById('betNumber');
+            betNumberInput.disabled = this.value !== 'number';
+        });
     </script>
 </body>
 </html>
