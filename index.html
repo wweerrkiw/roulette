@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рулетка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            font-size: 40px;
+            margin-top: 50px;
+        }
+        .balance {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .bet-buttons {
+            margin: 20px 0;
+        }
+        .bet-button {
+            background-color: #444;
+            border: 2px solid #fff;
+            color: white;
+            font-size: 20px;
+            padding: 15px;
+            width: 200px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .bet-button:hover {
+            background-color: #888;
+        }
+        .input-bet {
+            margin: 20px 0;
+            font-size: 20px;
+            padding: 10px;
+            width: 200px;
+            text-align: center;
+        }
+        .roll-button {
+            background-color: #28a745;
+            border: 2px solid #fff;
+            color: white;
+            font-size: 20px;
+            padding: 15px;
+            width: 200px;
+            margin: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .roll-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Рулетка</h1>
+    <div class="balance">
+        Баланс: <span id="balance">1000</span> монет
+    </div>
+
+    <div class="bet-buttons">
+        <button class="bet-button" onclick="placeBet('red')">Ставка на Красный</button>
+        <button class="bet-button" onclick="placeBet('black')">Ставка на Черный</button>
+        <button class="bet-button" onclick="placeBet('number')">Ставка на Число</button>
+    </div>
+
+    <div id="number-input" style="display: none;">
+        <input class="input-bet" type="number" id="betNumber" placeholder="Введите число (0-36)">
+    </div>
+
+    <button class="roll-button" onclick="rollRoulette()">Крутить Рулетку</button>
+
+    <script>
+        let balance = 1000; // Начальный баланс
+        let currentBet = 0;
+        let betType = '';
+
+        // Обработчик ставки
+        function placeBet(type) {
+            betType = type;
+            currentBet = 100;  // Можно добавить ввод ставки пользователем
+            document.getElementById('balance').textContent = balance;
+
+            if (betType === 'number') {
+                document.getElementById('number-input').style.display = 'block';
+            } else {
+                document.getElementById('number-input').style.display = 'none';
+            }
+        }
+
+        // Функция для вращения рулетки
+        function rollRoulette() {
+            if (balance < currentBet) {
+                alert("Недостаточно монет!");
+                return;
+            }
+
+            balance -= currentBet;
+            document.getElementById('balance').textContent = balance;
+
+            // Генерация случайного числа и цвета
+            const result = Math.floor(Math.random() * 37); // Рулетка от 0 до 36
+            const colors = ['red', 'black'];
+            const resultColor = colors[result % 2]; // Черный и красный чередуются
+
+            console.log(`Рулетка: ${result} ${resultColor}`);
+
+            // Проверка выигрыша
+            let win = false;
+            if (betType === 'red' && resultColor === 'red') {
+                win = true;
+            } else if (betType === 'black' && resultColor === 'black') {
+                win = true;
+            } else if (betType === 'number' && result === parseInt(document.getElementById('betNumber').value)) {
+                win = true;
+            }
+
+            if (win) {
+                alert(`Поздравляем, вы выиграли! Ставка: ${currentBet} монет`);
+                balance += currentBet * 2; // Выигрыш в 2 раза больше ставки
+            } else {
+                alert(`Увы, вы проиграли! Ставка: ${currentBet} монет`);
+            }
+
+            document.getElementById('balance').textContent = balance;
+        }
+    </script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Рулетка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            font-size: 40px;
+            margin-top: 50px;
+        }
+        .balance {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        .bet-buttons {
+            margin: 20px 0;
+        }
+        .bet-button {
+            background-color: #444;
+            border: 2px solid #fff;
+            color: white;
+            font-size: 20px;
+            padding: 15px;
+            width: 200px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .bet-button:hover {
+            background-color: #888;
+        }
+        .input-bet {
+            margin: 20px 0;
+            font-size: 20px;
+            padding: 10px;
+            width: 200px;
+            text-align: center;
+        }
+        .roll-button {
+            background-color: #28a745;
+            border: 2px solid #fff;
+            color: white;
+            font-size: 20px;
+            padding: 15px;
+            width: 200px;
+            margin: 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .roll-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Рулетка</h1>
+    <div class="balance">
+        Баланс: <span id="balance">1000</span> монет
+    </div>
+
+    <div class="bet-buttons">
+        <button class="bet-button" onclick="placeBet('red')">Ставка на Красный</button>
+        <button class="bet-button" onclick="placeBet('black')">Ставка на Черный</button>
+        <button class="bet-button" onclick="placeBet('number')">Ставка на Число</button>
+    </div>
+
+    <div id="number-input" style="display: none;">
+        <input class="input-bet" type="number" id="betNumber" placeholder="Введите число (0-36)">
+    </div>
+
+    <button class="roll-button" onclick="rollRoulette()">Крутить Рулетку</button>
+
+    <script>
+        let balance = 1000; // Начальный баланс
+        let currentBet = 0;
+        let betType = '';
+
+        // Обработчик ставки
+        function placeBet(type) {
+            betType = type;
+            currentBet = 100;  // Можно добавить ввод ставки пользователем
+            document.getElementById('balance').textContent = balance;
+
+            if (betType === 'number') {
+                document.getElementById('number-input').style.display = 'block';
+            } else {
+                document.getElementById('number-input').style.display = 'none';
+            }
+        }
+
+        // Функция для вращения рулетки
+        function rollRoulette() {
+            if (balance < currentBet) {
+                alert("Недостаточно монет!");
+                return;
+            }
+
+            balance -= currentBet;
+            document.getElementById('balance').textContent = balance;
+
+            // Генерация случайного числа и цвета
+            const result = Math.floor(Math.random() * 37); // Рулетка от 0 до 36
+            const colors = ['red', 'black'];
+            const resultColor = colors[result % 2]; // Черный и красный чередуются
+
+            console.log(`Рулетка: ${result} ${resultColor}`);
+
+            // Проверка выигрыша
+            let win = false;
+            if (betType === 'red' && resultColor === 'red') {
+                win = true;
+            } else if (betType === 'black' && resultColor === 'black') {
+                win = true;
+            } else if (betType === 'number' && result === parseInt(document.getElementById('betNumber').value)) {
+                win = true;
+            }
+
+            if (win) {
+                alert(`Поздравляем, вы выиграли! Ставка: ${currentBet} монет`);
+                balance += currentBet * 2; // Выигрыш в 2 раза больше ставки
+            } else {
+                alert(`Увы, вы проиграли! Ставка: ${currentBet} монет`);
+            }
+
+            document.getElementById('balance').textContent = balance;
+        }
+    </script>
+
+</body>
+</html>
