@@ -40,9 +40,9 @@
 
         .roulette-pointer {
             position: absolute;
-            top: -20px;
+            top: -30px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) rotate(180deg); /* Исправление стрелки */
             width: 0;
             height: 0;
             border-left: 10px solid transparent;
@@ -197,14 +197,10 @@
 
         function placeBet() {
             const betAmount = parseInt(document.getElementById('betAmount').value);
-            const betType = document.getElementById('betType').value;
-            const betNumber = parseInt(document.getElementById('betNumber').value);
-
             if (isNaN(betAmount) || betAmount <= 0 || betAmount > balance) {
                 alert('Введите корректную сумму ставки.');
                 return;
             }
-
             balance -= betAmount;
             document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
 
