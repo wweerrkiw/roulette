@@ -12,267 +12,165 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(to bottom, #1e3c72, #2a5298);
-            color: #fff;
-            font-family: Arial, sans-serif;
-        }
-
-        .balance-display {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: linear-gradient(to right, #ffd700, #808080);
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
+            background: #f2f5f9;
             color: #333;
+            font-family: 'Arial', sans-serif;
+            padding: 10px;
         }
 
         .roulette-container {
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            width: 90%; /* Адаптивная ширина */
+            max-width: 400px; /* Максимальная ширина */
+            margin-bottom: 20px;
+        }
+
+        .roulette {
             position: relative;
-            width: 400px;
-            height: 400px;
+            width: 100%; /* Адаптивная ширина */
+            max-width: 250px;
+            height: 250px;
             border-radius: 50%;
-            overflow: hidden;
-            border: 4px solid #fff;
+            margin: 0 auto;
         }
 
         .roulette-pointer {
             position: absolute;
-            top: -30px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
             border-left: 10px solid transparent;
             border-right: 10px solid transparent;
-            border-bottom: 30px solid yellow;
+            border-bottom: 30px solid #3498db;
         }
 
         .bet-input {
-            margin: 10px 0;
+            margin-bottom: 10px;
             display: flex;
+            justify-content: center;
+        }
+
+        .bet-input input {
+            padding: 5px;
+            width: 80%;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .bet-controls {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap; /* Адаптивное расположение */
             gap: 10px;
         }
 
-        .bet-input input, .bet-input select {
-            padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .bet-button {
+        .bet-controls button {
             padding: 10px 20px;
-            background-color: #ff4500;
-            color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px;
             cursor: pointer;
+            background: #3498db;
+            color: #fff;
+            flex: 1;
             transition: background 0.3s;
         }
 
-        .bet-button:hover {
-            background-color: #e03e00;
+        .bet-controls button:hover {
+            background: #2980b9;
         }
 
-        .history {
-            position: absolute;
-            top: 60px;
-            left: 0;
-            right: 0;
+        .history-container {
             display: flex;
+            overflow-x: auto;
             gap: 10px;
-            overflow: hidden;
+            padding: 10px;
             white-space: nowrap;
+            width: 100%; /* Адаптивная ширина */
         }
 
         .history-item {
-            min-width: 150px;
-            padding: 10px;
-            border-radius: 10px;
+            background: linear-gradient(to right, #ff6347, #ff4500);
+            border-radius: 15px;
+            padding: 5px 15px;
             color: #fff;
-            font-size: 14px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            animation: slideIn 4s forwards;
-        }
-
-        @keyframes slideIn {
-            0% { transform: translateX(100%); opacity: 0; }
-            10% { opacity: 1; }
-            100% { transform: translateX(-100%); opacity: 1; }
+            font-size: 12px;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
-    <div class="balance-display" id="balance">Баланс: 1000 монет</div>
     <div class="roulette-container">
-        <div class="roulette-pointer"></div>
-        <canvas id="rouletteCanvas" width="400" height="400"></canvas>
+        <div class="roulette">
+            <div class="roulette-pointer"></div>
+            <canvas id="rouletteCanvas" width="250" height="250"></canvas>
+        </div>
+        <div class="bet-input">
+            <input type="number" id="betAmount" placeholder="Сумма ставки" min="1">
+        </div>
+        <div class="bet-controls">
+            <button onclick="placeBet(3)">3x</button>
+            <button onclick="placeBet(20)">20x</button>
+            <button onclick="placeBet(2)">2x</button>
+            <button onclick="placeBet(20)">20x</button>
+        </div>
     </div>
-    <div class="bet-input">
-        <input type="number" id="betAmount" placeholder="Сумма ставки" min="1">
-        <select id="betType">
-            <option value="red">Красное</option>
-            <option value="black">Черное</option>
-            <option value="green">Зеленое (0)</option>
-            <option value="number">Число</option>
-        </select>
-        <input type="number" id="betNumber" placeholder="Число (0-36)" min="0" max="36" disabled>
-    </div>
-    <button class="bet-button" onclick="placeBet()">Сделать ставку</button>
-
-    <div class="history" id="history"></div>
+    <div class="history-container" id="history"></div>
 
     <script>
+        let balance = 1000; // Начальный баланс
         const canvas = document.getElementById('rouletteCanvas');
         const ctx = canvas.getContext('2d');
-        const segments = [
-            { color: 'green', number: 0 },
-            { color: 'red', number: 32 }, { color: 'black', number: 15 },
-            { color: 'red', number: 19 }, { color: 'black', number: 4 },
-            { color: 'red', number: 21 }, { color: 'black', number: 2 },
-            { color: 'red', number: 25 }, { color: 'black', number: 17 },
-            { color: 'red', number: 34 }, { color: 'black', number: 6 },
-            { color: 'red', number: 27 }, { color: 'black', number: 13 },
-            { color: 'red', number: 36 }, { color: 'black', number: 11 },
-            { color: 'red', number: 30 }, { color: 'black', number: 8 },
-            { color: 'red', number: 23 }, { color: 'black', number: 10 },
-            { color: 'red', number: 5 }, { color: 'black', number: 24 },
-            { color: 'red', number: 16 }, { color: 'black', number: 33 },
-            { color: 'red', number: 1 }, { color: 'black', number: 20 },
-            { color: 'red', number: 14 }, { color: 'black', number: 31 },
-            { color: 'red', number: 9 }, { color: 'black', number: 22 },
-            { color: 'red', number: 18 }, { color: 'black', number: 29 },
-            { color: 'red', number: 7 }, { color: 'black', number: 28 },
-            { color: 'red', number: 12 }, { color: 'black', number: 35 },
-            { color: 'red', number: 3 }, { color: 'black', number: 26 }
-        ];
-        let balance = 1000;
-        let angle = 0;
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const radius = centerX;
 
         function drawRoulette() {
-            const segmentAngle = (2 * Math.PI) / segments.length;
-            segments.forEach((segment, index) => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const segments = 36;
+            const segmentAngle = (2 * Math.PI) / segments;
+
+            for (let i = 0; i < segments; i++) {
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, index * segmentAngle, (index + 1) * segmentAngle);
-                ctx.fillStyle = segment.color;
+                ctx.arc(centerX, centerY, radius, i * segmentAngle, (i + 1) * segmentAngle);
+                ctx.fillStyle = i % 2 === 0 ? '#e74c3c' : '#34495e'; // Чередование цветов
                 ctx.fill();
                 ctx.closePath();
-
-                const textAngle = index * segmentAngle + segmentAngle / 2;
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(textAngle);
-                ctx.fillStyle = '#fff';
-                ctx.font = '12px Arial';
-                ctx.fillText(segment.number, radius - 30, 5);
-                ctx.restore();
-            });
-        }
-
-        function spinRoulette(callback) {
-            let currentAngle = 0;
-            const targetAngle = Math.random() * 360 + 720; // Random spin + 2 full rotations
-            const spinSpeed = 10; // Initial spin speed
-            const deceleration = 0.95; // Deceleration factor
-
-            function animateSpin() {
-                currentAngle += spinSpeed;
-                spinSpeed *= deceleration;
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate((currentAngle * Math.PI) / 180);
-                ctx.translate(-centerX, -centerY);
-                drawRoulette();
-                ctx.restore();
-
-                if (spinSpeed > 0.1) {
-                    requestAnimationFrame(animateSpin);
-                } else {
-                    callback(Math.floor(currentAngle / (360 / segments.length)) % segments.length);
-                }
             }
-
-            animateSpin();
         }
 
-        function placeBet() {
+        function placeBet(multiplier) {
             const betAmount = parseInt(document.getElementById('betAmount').value);
-            const betType = document.getElementById('betType').value;
-            const betNumber = parseInt(document.getElementById('betNumber').value);
-
             if (isNaN(betAmount) || betAmount <= 0 || betAmount > balance) {
                 alert('Введите корректную сумму ставки.');
                 return;
             }
 
             balance -= betAmount;
-            document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
-
-            spinRoulette((winningIndex) => {
-                const winningSegment = segments[winningIndex];
-                const winningNumber = winningSegment.number;
-                const winningColor = winningSegment.color;
-
-                let payout = 0;
-                let resultText = 'Проигрыш';
-
-                if ((betType === 'red' || betType === 'black') && betType === winningColor) {
-                    payout = betAmount * 1.5;
-                    resultText = 'Выигрыш';
-                } else if (betType === 'green' && winningNumber === 0) {
-                    payout = betAmount * 10;
-                    resultText = 'Выигрыш';
-                } else if (betType === 'number' && betNumber === winningNumber) {
-                    payout = betAmount * 5;
-                    resultText = 'Выигрыш';
-                }
-
-                if (payout > 0) {
-                    balance += payout;
-                    alert(`Поздравляем! Вы выиграли ${payout} монет!`);
-                } else {
-                    alert(`Вы проиграли. Выпало число ${winningNumber} (${winningColor}).`);
-                }
-
-                document.getElementById('balance').textContent = `Баланс: ${balance} монет`;
-
-                addHistory(winningNumber, winningColor, betAmount, resultText);
-            });
+            alert(`Ставка ${betAmount} сделана с множителем ${multiplier}x.`);
+            updateHistory(betAmount, multiplier);
         }
 
-        function addHistory(number, color, betAmount, result) {
+        function updateHistory(betAmount, multiplier) {
             const historyContainer = document.getElementById('history');
             const historyItem = document.createElement('div');
-
             historyItem.classList.add('history-item');
-            historyItem.style.background = color === 'green' ? 'linear-gradient(to right, #2ecc71, #27ae60)'
-                                      : color === 'red' ? 'linear-gradient(to right, #e74c3c, #c0392b)'
-                                      : 'linear-gradient(to right, #34495e, #2c3e50)';
-
-            historyItem.textContent = `№${number} ${color} | Ставка: ${betAmount} | ${result}`;
-
+            historyItem.textContent = `Ставка: ${betAmount} | Множитель: ${multiplier}x`;
             historyContainer.appendChild(historyItem);
 
+            // Удалить элемент истории через 10 секунд
             setTimeout(() => {
                 historyItem.remove();
             }, 10000);
         }
 
         drawRoulette();
-
-        document.getElementById('betType').addEventListener('change', function () {
-            const betNumberInput = document.getElementById('betNumber');
-            betNumberInput.disabled = this.value !== 'number';
-        });
     </script>
 </body>
 </html>
